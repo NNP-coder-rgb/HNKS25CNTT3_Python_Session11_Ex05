@@ -45,28 +45,30 @@ product_list = [
     }
 ]
 
-option = 0
-found = False
+option = ''
 
-while option != 6:
-    print()
-    print('===== HỆ THỐNG QUẢN LÝ GIAO DỊCH CỬA HÀNG YODY =====')
+while option != '6':
+    print('\n===== HỆ THỐNG QUẢN LÝ GIAO DỊCH CỬA HÀNG YODY =====')
     print('1. Hiển thị danh sách sản phẩm')
     print('2. Bán sản phẩm cho khách hàng')
     print('3. Xử lý đổi trả sản phẩm')
     print('4. Áp dụng giảm giá cho sản phẩm')
     print('5. Nhập thêm hàng vào kho cửa hàng')
     print('6. Thoát chương trình')
+    print('====================================================')
     
-    option = int(input('Nhập lựa chọn của bạn (1-6): '))
+    option = input('Nhập lựa chọn của bạn (1-6): ').strip()
     
     match option:
-        case 1:
+        case '1':
             print()
-            if product_list == []:
+            if not product_list:
                 print('Danh sách sản phẩm hiện đang trống.')
             else:
-                print('Danh sách sản phẩm hiện tại:')
+                print('DANH SÁCH SẢN PHẨM HIỆN TẠI:')
+                print(f"{'STT':<4} | {'Mã SP':<7} | {'Tên sản phẩm':<18} | {'Giá gốc':<10} | {'Kho':<5} | {'Bán':<5} | {'Trả':<5} | {'Giảm':<5} | {'Trạng thái'}")
+                print("-" * 90)
+                
                 for i, item in enumerate(product_list, start=1):
                     if item["quantity"] == 0:
                         status = "Hết hàng"
@@ -74,10 +76,11 @@ while option != 6:
                         status = "Sắp hết hàng"
                     else:
                         status = "Còn hàng"
-                    print(f'{i}. Mã SP: {item["product_id"]} | Tên: {item["product_name"]} | Giá: {item["price"]} | Tồn kho: {item["quantity"]} | Đã bán: {item["sold"]} | Đổi trả: {item["returned"]} | Giảm giá: {item["discount"]}% | Trạng thái: {status}')
+                        
+                    print(f"{i:<4} | {item['product_id']:<7} | {item['product_name']:<18} | {item['price']:<10,} | {item['quantity']:<5} | {item['sold']:<5} | {item['returned']:<5} | {item['discount']:<4}% | {status}")
             print()
             
-        case 2:
+        case '2':
             print()
             found = False
             input_pro_id = input('Nhập mã sản phẩm khách muốn mua: ').strip().upper()
@@ -88,12 +91,12 @@ while option != 6:
                     
                     qty_str = input('Nhập số lượng khách mua: ').strip()
                     if not qty_str.isdigit() or int(qty_str) <= 0:
-                        print('Số lượng mua không hợp lệ')
+                        print('Lỗi: Số lượng mua không hợp lệ, phải là số nguyên dương!')
                         break
                         
                     qty_buy = int(qty_str)
                     if qty_buy > item['quantity']:
-                        print('Số lượng trong kho không đủ để bán')
+                        print(f'Lỗi: Số lượng trong kho không đủ (Hiện còn: {item["quantity"]})')
                         break
                         
                     item['quantity'] -= qty_buy
@@ -101,14 +104,15 @@ while option != 6:
                     
                     price_after_discount = item['price'] * (100 - item['discount']) / 100
                     total_payment = price_after_discount * qty_buy
-                    print(f'Tổng tiền khách cần thanh toán: {int(total_payment)} VNĐ')
+                    print(f'Giá gốc: {item["price"]:,} VNĐ | Giảm giá: {item["discount"]}%')
+                    print(f'Tổng tiền khách cần thanh toán: {int(total_payment):,} VNĐ')
                     break
                     
             if not found:
-                print('Không tìm thấy sản phẩm cần bán')
+                print('Lỗi: Không tìm thấy mã sản phẩm cần bán trong hệ thống.')
             print()
             
-        case 3:
+        case '3':
             print()
             found = False
             input_pro_id = input('Nhập mã sản phẩm khách muốn đổi/trả: ').strip().upper()
@@ -117,14 +121,18 @@ while option != 6:
                 if input_pro_id == item['product_id']:
                     found = True
                     
+                    if item['sold'] == 0:
+                        print('Lỗi: Sản phẩm này chưa có lịch sử bán ra, không thể đổi trả!')
+                        break
+                    
                     qty_str = input('Nhập số lượng đổi/trả: ').strip()
                     if not qty_str.isdigit() or int(qty_str) <= 0:
-                        print('Số lượng đổi/trả không hợp lệ')
+                        print('Lỗi: Số lượng đổi/trả không hợp lệ!')
                         break
                         
                     qty_return = int(qty_str)
                     if qty_return > item['sold']:
-                        print('Số lượng đổi/trả không được vượt quá số lượng đã bán')
+                        print(f'Lỗi: Số lượng trả ({qty_return}) vượt quá số lượng đã bán ({item["sold"]})')
                         break
                         
                     item['sold'] -= qty_return
@@ -133,14 +141,14 @@ while option != 6:
                     
                     price_after_discount = item['price'] * (100 - item['discount']) / 100
                     total_refund = price_after_discount * qty_return
-                    print(f'Số tiền hoàn lại cho khách: {int(total_refund)} VNĐ')
+                    print(f'Số tiền cần hoàn lại cho khách: {int(total_refund):,} VNĐ')
                     break
                     
             if not found:
-                print('Không tìm thấy sản phẩm cần đổi trả')
+                print('Lỗi: Không tìm thấy mã sản phẩm cần đổi trả.')
             print()
             
-        case 4:
+        case '4':
             print()
             found = False
             input_pro_id = input('Nhập mã sản phẩm cần áp dụng giảm giá: ').strip().upper()
@@ -149,25 +157,25 @@ while option != 6:
                 if input_pro_id == item['product_id']:
                     found = True
                     
-                    dct_str = input('Nhập phần trăm giảm giá: ').strip()
+                    dct_str = input('Nhập phần trăm giảm giá (0-70): ').strip()
                     if not dct_str.isdigit():
-                        print('Phần trăm giảm giá không hợp lệ')
+                        print('Lỗi: Phần trăm giảm giá phải là ký tự số!')
                         break
                         
                     dct_val = int(dct_str)
                     if dct_val < 0 or dct_val > 70:
-                        print('Phần trăm giảm giá không hợp lệ')
+                        print('Lỗi: Phần trăm giảm giá không hợp lệ, chỉ áp dụng từ 0% đến 70%!')
                         break
                         
                     item['discount'] = dct_val
-                    print(f'Đã cập nhật giảm giá cho sản phẩm {item["product_id"]} thành {dct_val}%')
+                    print(f'Thành công: Đã cập nhật giảm giá cho sản phẩm {item["product_id"]} thành {dct_val}%')
                     break
                     
             if not found:
-                print('Không tìm thấy sản phẩm cần áp dụng giảm giá')
+                print('Lỗi: Không tìm thấy mã sản phẩm cần áp dụng giảm giá.')
             print()
             
-        case 5:
+        case '5':
             print()
             found = False
             input_pro_id = input('Nhập mã sản phẩm cần nhập thêm: ').strip().upper()
@@ -178,20 +186,20 @@ while option != 6:
                     
                     qty_str = input('Nhập số lượng nhập thêm: ').strip()
                     if not qty_str.isdigit() or int(qty_str) <= 0:
-                        print('Số lượng nhập thêm không hợp lệ')
+                        print('Lỗi: Số lượng nhập thêm không hợp lệ!')
                         break
                         
                     qty_add = int(qty_str)
                     item['quantity'] += qty_add
-                    print(f'Nhập thêm hàng thành công! Số lượng tồn kho mới: {item["quantity"]}')
+                    print(f'Thành công: Nhập hàng thành công! Số lượng tồn kho mới của {item["product_id"]}: {item["quantity"]} chiếc.')
                     break
                     
             if not found:
-                print('Không tìm thấy sản phẩm trong hệ thống')
+                print('Lỗi: Không tìm thấy mã sản phẩm này trong hệ thống.')
             print()
             
-        case 6:
-            print('Thoát chương trình.')
+        case '6':
+            print('Đã thoát hệ thống. Tạm biệt!')
             
         case _:
-            print('Lựa chọn không hợp lệ, vui lòng nhập lại!')
+            print('Lỗi: Lựa chọn không hợp lệ, vui lòng nhập lại số từ 1 đến 6!')
